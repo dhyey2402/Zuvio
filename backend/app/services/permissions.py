@@ -49,37 +49,31 @@ def check_permission(
         if share and ROLE_WEIGHTS.get(share.role, 0) >= required_weight:
             return True
 
-    # 2. Walk up the folder tree using a recursive CTE to prevent N+1 queries
+    # 2. Walk up the folder tree using ORM to prevent raw SQL dialect binding issues
     if current_folder_id:
-        from sqlalchemy import text
-        query = text("""
-            WITH RECURSIVE folder_path AS (
-                SELECT id, parent_id, owner_id
-                FROM folders
-                WHERE id = :folder_id
-                
-                UNION ALL
-                
-                SELECT f.id, f.parent_id, f.owner_id
-                FROM folders f
-                INNER JOIN folder_path fp ON f.id = fp.parent_id
-            )
-            SELECT fp.owner_id, s.role
-            FROM folder_path fp
-            LEFT JOIN shares s ON s.folder_id = fp.id AND s.recipient_id = :user_id
-        """)
+        # Prevent infinite loops in case of hierarchy corruption
+        max_depth = 50 
+        current_node_id = current_folder_id
+        depth = 0
         
-        result = db.execute(query, {"folder_id": current_folder_id, "user_id": user.id}).fetchall()
-        
-        for row in result:
-            # Check ownership
-            if row.owner_id == user.id:
+        while current_node_id and depth < max_depth:
+            # Check folder ownership
+            folder = db.query(Folder).filter(Folder.id == current_node_id).first()
+            if not folder:
+                break
+                
+            if folder.owner_id == user.id:
                 return True
                 
             # Check share on this folder
-            if row.role and ROLE_WEIGHTS.get(row.role, 0) >= required_weight:
+            share = db.query(Share).filter(Share.folder_id == current_node_id, Share.recipient_id == user.id).first()
+            if share and ROLE_WEIGHTS.get(share.role, 0) >= required_weight:
                 return True
-        
+                
+            # Move up the tree
+            current_node_id = folder.parent_id
+            depth += 1
+            
     return False
 
 def require_permission(

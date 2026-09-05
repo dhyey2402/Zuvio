@@ -49,10 +49,17 @@ def sample_trash(db: Session):
     )
     db.add(file)
     db.commit()
+    file_id = file.id
+    folder_id = folder.id
     yield {"folder": folder, "file": file}
     
-    db.delete(file)
-    db.delete(folder)
+    db.expire_all()
+    file_in_db = db.query(File).filter(File.id == file_id).first()
+    if file_in_db:
+        db.delete(file_in_db)
+    folder_in_db = db.query(Folder).filter(Folder.id == folder_id).first()
+    if folder_in_db:
+        db.delete(folder_in_db)
     db.commit()
 
 def test_get_trash(client: TestClient, sample_trash):

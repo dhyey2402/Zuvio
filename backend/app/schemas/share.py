@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, EmailStr, field_validator, ConfigDict
 from datetime import datetime
 import uuid
 
@@ -9,15 +9,17 @@ class ShareCreate(BaseModel):
     recipient_email: EmailStr
     role: str # VIEWER or EDITOR
     
-    @validator('role')
+    @field_validator('role')
+    @classmethod
     def validate_role(cls, v):
         if v not in ['VIEWER', 'EDITOR']:
             raise ValueError('Role must be VIEWER or EDITOR')
         return v
         
-    @validator('folder_id', always=True)
-    def check_file_or_folder(cls, v, values):
-        file_id = values.get('file_id')
+    @field_validator('folder_id')
+    @classmethod
+    def check_file_or_folder(cls, v, info):
+        file_id = info.data.get('file_id')
         if not file_id and not v:
             raise ValueError('Either file_id or folder_id must be provided')
         if file_id and v:
@@ -27,7 +29,8 @@ class ShareCreate(BaseModel):
 class ShareUpdate(BaseModel):
     role: str
     
-    @validator('role')
+    @field_validator('role')
+    @classmethod
     def validate_role(cls, v):
         if v not in ['VIEWER', 'EDITOR']:
             raise ValueError('Role must be VIEWER or EDITOR')
@@ -48,5 +51,4 @@ class ShareResponse(BaseModel):
     recipient: UserBasic
     created_by: UserBasic
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@layer base {
+  :root {
+    /* Premium Monochromatic Scale (Zinc-like) */
+    --background: #ffffff;
+    --foreground: #09090b;
+    
+    --card: #ffffff;
+    --card-foreground: #09090b;
+    
+    --popover: #ffffff;
+    --popover-foreground: #09090b;
+    
+    /* Primary brand color - almost black, high contrast */
+    --primary: #09090b;
+    --primary-foreground: #fafafa;
+    
+    /* Secondary actions - soft gray */
+    --secondary: #f4f4f5;
+    --secondary-foreground: #18181b;
+    
+    /* Muted elements */
+    --muted: #f4f4f5;
+    --muted-foreground: #71717a;
+    
+    /* Accent / Hovers */
+    --accent: #f4f4f5;
+    --accent-foreground: #09090b;
+    
+    /* Semantic Colors */
+    --destructive: #ef4444;
+    --destructive-foreground: #fafafa;
+
+    --success: #10b981;
+    --success-foreground: #fafafa;
+
+    /* Crisp borders and inputs */
+    --border: #e4e4e7;
+    --input: #e4e4e7;
+    --ring: #a1a1aa;
+    
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    /* Optimize font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Tighter tracking for headings */
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight font-semibold;
+  }
+}
+
+@layer components {
+  /* We will remove custom component classes here and move them to their respective React components
+     to ensure Tailwind IntelliSense and composition works best, but keep a few global ones if needed. */
+  .card-container {
+    @apply rounded-xl border bg-card text-card-foreground shadow-subtle;
+  }
+}

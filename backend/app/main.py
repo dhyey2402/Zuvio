@@ -2,6 +2,19 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.api import api_router
+import logging
+from fastapi import Depends
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+from app.api.deps import get_db
+
+# Configure Production Logging
+logging.basicConfig(
+    level=logging.INFO if settings.APP_ENV == "production" else logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[logging.StreamHandler()]
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -16,7 +29,7 @@ if settings.BACKEND_CORS_ORIGINS:
         CORSMiddleware,
         allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
         allow_credentials=True,
-        allow_methods=["*"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"] if settings.APP_ENV == "production" else ["*"],
         allow_headers=["*"],
     )
 
@@ -25,3 +38,15 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 @app.get("/")
 def read_root():
     return {"message": f"Welcome to the {settings.APP_NAME} API."}
+
+@app.get("/health", tags=["system"])
+def health_check(db: Session = Depends(get_db)):
+    """Lightweight health check endpoint for deployment probes."""
+    try:
+        # Check DB connectivity
+        db.execute(text("SELECT 1"))
+        return {"status": "ok", "environment": settings.APP_ENV}
+    except Exception as e:
+        logger.error(f"Health check failed: {e}")
+        from fastapi import HTTPException
+        raise HTTPException(status_code=503, detail="Service unavailable")

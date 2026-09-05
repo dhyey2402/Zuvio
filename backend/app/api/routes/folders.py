@@ -66,6 +66,7 @@ def create_folder(
     # Check for duplicate names
     # Note: For shared folders, owner might be different, but we check within the destination folder.
     existing = db.query(Folder).filter(
+        Folder.owner_id == (parent_folder.owner_id if request.parent_id else current_user.id),
         Folder.parent_id == request.parent_id,
         Folder.name == request.name,
         Folder.deleted_at.is_(None)
@@ -113,6 +114,7 @@ def update_folder(
     if request.name is not None and request.name != folder.name:
         # Check duplicate name
         existing = db.query(Folder).filter(
+            Folder.owner_id == folder.owner_id,
             Folder.parent_id == folder.parent_id,
             Folder.name == request.name,
             Folder.deleted_at.is_(None)
@@ -129,7 +131,10 @@ def update_folder(
         validate_circular_hierarchy(db, folder.id, request.parent_id)
         
         # Check name collision in new parent
+        # The destination folder owner dictates the namespace
+        dest_owner_id = db.query(Folder).filter(Folder.id == request.parent_id).first().owner_id if request.parent_id else folder.owner_id
         existing = db.query(Folder).filter(
+            Folder.owner_id == dest_owner_id,
             Folder.parent_id == request.parent_id,
             Folder.name == folder.name,
             Folder.deleted_at.is_(None)
