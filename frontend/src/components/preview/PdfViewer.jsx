@@ -60,7 +60,7 @@ export function PdfViewer({ file }) {
         <iframe
           src={`${url}#toolbar=0`}
           className="w-full h-full border-none shadow-2xl bg-white"
-          title={file.name}
+          title={file.original_filename || file.name}
           onLoad={() => setIsLoading(false)}
           onError={() => {
             setIsLoading(false);

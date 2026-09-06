@@ -51,7 +51,7 @@ export function FileListItem({ file, onOpen, onContext }) {
           <Icon className="w-5 h-5 opacity-90" />
         </div>
         <div className="flex flex-col flex-1 min-w-0">
-          <span className="font-medium text-foreground truncate select-none">{file.name}</span>
+          <span className="font-medium text-foreground truncate select-none">{file.original_filename || file.name}</span>
         </div>
       </div>
       

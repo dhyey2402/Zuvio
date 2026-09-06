@@ -48,7 +48,7 @@ export function ImageViewer({ file }) {
           animate={{ opacity: isLoading ? 0 : 1, scale: isLoading ? 0.9 : 1 }}
           transition={{ duration: 0.3 }}
           src={url}
-          alt={file.name}
+          alt={file.original_filename || file.name}
           className="max-w-full max-h-full object-contain drop-shadow-2xl rounded-sm"
           onLoad={() => setIsLoading(false)}
           onError={() => setIsLoading(false)}

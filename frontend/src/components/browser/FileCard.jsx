@@ -68,8 +68,8 @@ export function FileCard({ file, onOpen, onContext }) {
       </div>
       
       <div className="mt-auto">
-        <h4 className="font-medium text-foreground truncate select-none" title={file.name}>
-          {file.name}
+        <h4 className="font-medium text-foreground truncate select-none" title={file.original_filename || file.name}>
+          {file.original_filename || file.name}
         </h4>
         <div className="flex items-center justify-between mt-1">
           <p className="text-xs text-muted-foreground select-none">{file.date}</p>

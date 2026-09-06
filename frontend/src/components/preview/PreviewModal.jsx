@@ -58,7 +58,7 @@ export function PreviewModal({ file, isOpen, onClose }) {
             {/* Toolbar */}
             <div className="flex items-center justify-between p-4 bg-black/40 text-white backdrop-blur-md border-b border-white/10 z-10">
               <div className="flex items-center gap-3 truncate pr-4">
-                <span className="font-medium truncate">{file.name}</span>
+                <span className="font-medium truncate">{file.original_filename || file.name}</span>
                 <span className="text-xs text-white/60 bg-white/10 px-2 py-0.5 rounded-full">{file.size}</span>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
