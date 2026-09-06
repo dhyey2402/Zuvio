@@ -24,14 +24,20 @@ app = FastAPI(
 
 # Configure CORS
 # We want to allow credentials because we use HttpOnly cookies for Auth
-if settings.BACKEND_CORS_ORIGINS:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
-        allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"] if settings.APP_ENV == "production" else ["*"],
-        allow_headers=["*"],
-    )
+origins = [str(origin) for origin in settings.BACKEND_CORS_ORIGINS]
+
+# Ensure frontend URL and production URL are always allowed
+for required_origin in [settings.FRONTEND_URL, "https://frontend-puce-zeta-22.vercel.app"]:
+    if required_origin and required_origin not in origins:
+        origins.append(required_origin)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"] if settings.APP_ENV == "production" else ["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
