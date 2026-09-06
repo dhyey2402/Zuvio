@@ -3,7 +3,7 @@ import axios from 'axios';
 
 class UploadService {
   async initUpload(file, folderId = null) {
-    const response = await apiClient.post('/files/init-upload', {
+    const response = await apiClient.post('files/init-upload', {
       filename: file.name,
       size: file.size,
       mime_type: file.type || 'application/octet-stream',
@@ -56,7 +56,7 @@ class UploadService {
   }
 
   async completeUpload(fileId) {
-    const response = await apiClient.post('/files/complete-upload', {
+    const response = await apiClient.post('files/complete-upload', {
       file_id: fileId
     });
     return response.data;

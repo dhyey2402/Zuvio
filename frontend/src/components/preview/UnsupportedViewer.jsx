@@ -10,11 +10,11 @@ export function UnsupportedViewer({ file }) {
       </div>
       
       <h3 className="text-2xl font-semibold text-white mb-2 truncate w-full px-4">
-        {file.name}
+        {file.original_filename || file.name}
       </h3>
       
       <p className="text-white/50 mb-8 flex items-center gap-2 text-sm">
-        <span className="uppercase tracking-wider font-medium">{file.type?.split('/')[1] || file.name.split('.').pop() || 'Unknown'} File</span>
+        <span className="uppercase tracking-wider font-medium">{(file.mime_type || file.type)?.split('/')[1] || (file.original_filename || file.name || '').split('.').pop() || 'Unknown'} File</span>
         <span>•</span>
         <span>{file.size}</span>
       </p>
