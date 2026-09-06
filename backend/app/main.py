@@ -33,6 +33,11 @@ for required_origin in [settings.FRONTEND_URL, "https://frontend-puce-zeta-22.ve
 
 from starlette.middleware.sessions import SessionMiddleware
 
+# IMPORTANT: Middleware order matters in Starlette/FastAPI.
+# Middleware added LAST is processed FIRST (outermost layer).
+# CORSMiddleware must be the outermost (added LAST) so it handles
+# preflight OPTIONS requests before SessionMiddleware can interfere.
+
 app.add_middleware(
     SessionMiddleware, 
     secret_key=settings.SECRET_KEY, 
@@ -45,7 +50,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"] if settings.APP_ENV == "production" else ["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
