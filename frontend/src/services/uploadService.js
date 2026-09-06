@@ -3,24 +3,13 @@ import axios from 'axios';
 
 class UploadService {
   async initUpload(file, folderId = null) {
-    try {
-      const response = await apiClient.post('/files/init-upload', {
-        filename: file.name,
-        size: file.size,
-        mime_type: file.type || 'application/octet-stream',
-        folder_id: folderId
-      });
-      return response.data;
-    } catch (error) {
-      // Temporary mock fallback for UI demonstration since backend DB is down
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return {
-        file_id: crypto.randomUUID(),
-        storage_path: 'mock/path',
-        presigned_url: 'http://mock-storage.local',
-        form_data: {}
-      };
-    }
+    const response = await apiClient.post('/files/init-upload', {
+      filename: file.name,
+      size: file.size,
+      mime_type: file.type || 'application/octet-stream',
+      folder_id: folderId === 'root' ? null : folderId
+    });
+    return response.data;
   }
 
   async uploadFileToStorage(file, uploadData, onProgress, cancelToken) {
@@ -55,15 +44,10 @@ class UploadService {
   }
 
   async completeUpload(fileId) {
-    try {
-      const response = await apiClient.post('/files/complete-upload', {
-        file_id: fileId
-      });
-      return response.data;
-    } catch (error) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return { success: true };
-    }
+    const response = await apiClient.post('/files/complete-upload', {
+      file_id: fileId
+    });
+    return response.data;
   }
 
   /**
