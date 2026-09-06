@@ -21,7 +21,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: BACKEND_CORS_ORIGINS
-        value: "https://zuvio-frontend.onrender.com,http://localhost:3000"
+        value: "https://zuvio-frontend.onrender.com,http://localhost:3000,https://frontend-puce-zeta-22.vercel.app"
       - key: STORAGE_BUCKET_NAME
         sync: false
       - key: STORAGE_ACCESS_KEY
