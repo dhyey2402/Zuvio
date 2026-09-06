@@ -13,13 +13,17 @@ router = APIRouter()
 
 def set_auth_cookies(response: Response, access_token: str, refresh_token: str):
     is_secure = settings.APP_ENV != "development"
+    
+    # We must use samesite="none" for cross-origin (Vercel to Render) cookie transmission
+    cookie_samesite = "none" if is_secure else "lax"
+    
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        samesite="lax",
+        samesite=cookie_samesite,
         secure=is_secure,
     )
     response.set_cookie(
@@ -28,7 +32,7 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str):
         httponly=True,
         max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
         expires=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
-        samesite="lax",
+        samesite=cookie_samesite,
         secure=is_secure,
     )
 
@@ -81,8 +85,10 @@ def logout(response: Response):
     Logout user by clearing cookies.
     """
     is_secure = settings.APP_ENV != "development"
-    response.delete_cookie("access_token", httponly=True, samesite="lax", secure=is_secure)
-    response.delete_cookie("refresh_token", httponly=True, samesite="lax", secure=is_secure)
+    cookie_samesite = "none" if is_secure else "lax"
+    
+    response.delete_cookie("access_token", httponly=True, samesite=cookie_samesite, secure=is_secure)
+    response.delete_cookie("refresh_token", httponly=True, samesite=cookie_samesite, secure=is_secure)
     return {"message": "Successfully logged out"}
 
 @router.get("/me", response_model=UserResponse)
