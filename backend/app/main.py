@@ -37,8 +37,8 @@ app.add_middleware(
     SessionMiddleware, 
     secret_key=settings.SECRET_KEY, 
     max_age=3600,
-    same_site="lax",
-    https_only=settings.APP_ENV == "production"
+    same_site="none" if settings.APP_ENV != "development" else "lax",
+    https_only=settings.APP_ENV != "development"
 )
 
 app.add_middleware(
