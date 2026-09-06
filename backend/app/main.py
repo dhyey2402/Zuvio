@@ -31,6 +31,16 @@ for required_origin in [settings.FRONTEND_URL, "https://frontend-puce-zeta-22.ve
     if required_origin and required_origin not in origins:
         origins.append(required_origin)
 
+from starlette.middleware.sessions import SessionMiddleware
+
+app.add_middleware(
+    SessionMiddleware, 
+    secret_key=settings.SECRET_KEY, 
+    max_age=3600,
+    same_site="lax",
+    https_only=settings.APP_ENV == "production"
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,

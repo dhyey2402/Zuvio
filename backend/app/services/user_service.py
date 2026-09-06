@@ -40,6 +40,36 @@ def authenticate_user(db: Session, user_in: UserLogin) -> User:
     user = get_user_by_email(db, user_in.email)
     if not user:
         return None
-    if not verify_password(user_in.password, user.password_hash):
+    if not user.password_hash or not verify_password(user_in.password, user.password_hash):
         return None
     return user
+
+def get_or_create_google_user(db: Session, email: str, google_id: str, name: str, picture: str) -> User:
+    user = get_user_by_email(db, email)
+    if user:
+        if not user.google_id:
+            user.google_id = google_id
+            user.auth_provider = "google"
+            db.commit()
+            db.refresh(user)
+        return user
+    
+    db_user = User(
+        email=email,
+        password_hash=None,
+        google_id=google_id,
+        auth_provider="google",
+        full_name=name,
+        avatar_url=picture
+    )
+    db.add(db_user)
+    try:
+        db.commit()
+        db.refresh(db_user)
+        return db_user
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Error creating user via Google OAuth.",
+        )
