@@ -2,11 +2,11 @@ import React from 'react';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { Button } from '../ui/Button';
 
-export function ConfirmDeleteDialog({ isOpen, onClose, onConfirm, itemName, isDeleting }) {
+export function ConfirmDeleteDialog({ isOpen, onClose, onConfirm, itemName, isDeleting, error }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
@@ -29,6 +29,12 @@ export function ConfirmDeleteDialog({ isOpen, onClose, onConfirm, itemName, isDe
             Are you sure you want to permanently delete <span className="font-semibold text-foreground">"{itemName}"</span>? 
             This action cannot be undone.
           </p>
+
+          {error && (
+            <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-md animate-in fade-in duration-200">
+              {error}
+            </div>
+          )}
         </div>
 
         <div className="bg-muted/50 px-6 py-4 flex items-center justify-end gap-3 border-t border-border">
@@ -53,3 +59,4 @@ export function ConfirmDeleteDialog({ isOpen, onClose, onConfirm, itemName, isDe
     </div>
   );
 }
+

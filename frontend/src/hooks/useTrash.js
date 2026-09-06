@@ -30,11 +30,13 @@ export function useTrash() {
   // Permanently delete item
   const permanentDeleteItem = useMutation({
     mutationFn: async ({ id }) => {
-      const response = await apiClient.delete(`/trash/${id}`);
-      return response.data;
+      await apiClient.delete(`/trash/${id}`);
+      // 204 No Content — no response body to return
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trash'] });
+      queryClient.invalidateQueries({ queryKey: ['files'] });
+      queryClient.invalidateQueries({ queryKey: ['search'] });
     },
   });
 

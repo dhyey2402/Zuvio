@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useContextMenu } from '../../contexts/ContextMenuContext';
 import { useShareModal } from '../../contexts/ShareModalContext';
 import { useFileActions } from '../../hooks/useFileActions';
@@ -17,6 +17,9 @@ export function GlobalContextMenu() {
   
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+  // Store the item targeted for permanent deletion independently from context menu state
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   // Close if we click outside the menu
   useEffect(() => {
@@ -34,12 +37,65 @@ export function GlobalContextMenu() {
     };
   }, [menuState.isOpen, closeMenu]);
 
-  if (!menuState.isOpen || !menuState.item) {
-    if (isConfirmDeleteOpen) {
-       // Keep dialog mounted if menu is closed but dialog is open
-    } else {
-       return null;
+  const handleOpenConfirmDelete = useCallback(() => {
+    // Capture the item and type BEFORE closing the menu
+    const item = menuState.item;
+    const type = menuState.type;
+    if (!item) return;
+    
+    setDeleteTarget({ item, type });
+    setDeleteError(null);
+    setIsConfirmDeleteOpen(true);
+    closeMenu();
+  }, [menuState.item, menuState.type, closeMenu]);
+
+  const handlePermanentDelete = useCallback(async () => {
+    if (!deleteTarget?.item?.id) return;
+    
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      await permanentDeleteItem({ id: deleteTarget.item.id });
+      setIsConfirmDeleteOpen(false);
+      setDeleteTarget(null);
+    } catch (error) {
+      const message = error?.response?.data?.detail 
+        || error?.message 
+        || 'Failed to permanently delete. Please try again.';
+      setDeleteError(message);
+      console.error("Failed to permanently delete item:", error);
+    } finally {
+      setIsDeleting(false);
     }
+  }, [deleteTarget, permanentDeleteItem]);
+
+  const handleCloseConfirmDelete = useCallback(() => {
+    if (isDeleting) return; // Don't close while delete is in progress
+    setIsConfirmDeleteOpen(false);
+    setDeleteTarget(null);
+    setDeleteError(null);
+  }, [isDeleting]);
+
+  // Render the confirmation dialog independently — even when context menu is closed
+  const confirmDialog = deleteTarget?.item && (
+    <ConfirmDeleteDialog
+      isOpen={isConfirmDeleteOpen}
+      onClose={handleCloseConfirmDelete}
+      onConfirm={handlePermanentDelete}
+      itemName={deleteTarget.item.name || deleteTarget.item.original_filename}
+      isDeleting={isDeleting}
+      error={deleteError}
+    />
+  );
+
+  // If the context menu is closed and the dialog is also closed, render nothing
+  // But always render the dialog if it's open, regardless of context menu state
+  if (!menuState.isOpen || !menuState.item) {
+    if (isConfirmDeleteOpen && deleteTarget) {
+      // Only render the dialog
+      return confirmDialog;
+    }
+    return null;
   }
 
   const { x, y, item, type } = menuState;
@@ -62,18 +118,6 @@ export function GlobalContextMenu() {
       await restoreItem({ id: item.id });
     } catch (error) {
       console.error("Failed to restore item:", error);
-    }
-  };
-
-  const handlePermanentDelete = async () => {
-    setIsDeleting(true);
-    try {
-      await permanentDeleteItem({ id: item.id });
-      setIsConfirmDeleteOpen(false);
-    } catch (error) {
-      console.error("Failed to permanently delete item:", error);
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -120,10 +164,7 @@ export function GlobalContextMenu() {
                 icon={<Trash2 className="h-4 w-4" />} 
                 label="Delete permanently" 
                 variant="destructive"
-                onClick={() => {
-                  setIsConfirmDeleteOpen(true);
-                  closeMenu(); // Hide menu, show dialog
-                }} 
+                onClick={handleOpenConfirmDelete} 
               />
             </>
           ) : (
@@ -190,16 +231,8 @@ export function GlobalContextMenu() {
         </div>
       )}
 
-      {/* Confirmation Dialog */}
-      {item && (
-        <ConfirmDeleteDialog
-          isOpen={isConfirmDeleteOpen}
-          onClose={() => setIsConfirmDeleteOpen(false)}
-          onConfirm={handlePermanentDelete}
-          itemName={item.name || item.original_filename}
-          isDeleting={isDeleting}
-        />
-      )}
+      {/* Confirmation Dialog — rendered independently from context menu */}
+      {confirmDialog}
     </>
   );
 }
