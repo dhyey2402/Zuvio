@@ -49,33 +49,25 @@ class StorageService:
 
     def generate_presigned_post(self, storage_path: str, mime_type: str, max_size: int) -> Dict[str, Any]:
         """
-        Generate a presigned POST URL and fields for direct client upload.
-        Validates content-length-range to enforce max_size.
+        Generate a presigned PUT URL for direct client upload (renamed for backwards compatibility).
+        Note: Supabase S3 compatibility requires PUT instead of POST.
         """
         if not self.s3_client:
             raise RuntimeError("Storage client not configured.")
 
-        # Conditions for the presigned POST
-        conditions = [
-            ["starts-with", "$Content-Type", mime_type],
-            ["content-length-range", 1, max_size]
-        ]
-        
-        fields = {
-            "Content-Type": mime_type
-        }
-
         try:
-            response = self.s3_client.generate_presigned_post(
-                Bucket=self.bucket_name,
-                Key=storage_path,
-                Fields=fields,
-                Conditions=conditions,
+            url = self.s3_client.generate_presigned_url(
+                'put_object',
+                Params={
+                    'Bucket': self.bucket_name,
+                    'Key': storage_path,
+                    'ContentType': mime_type
+                },
                 ExpiresIn=3600  # 1 hour expiration
             )
-            return response
+            return {"url": url, "fields": {}}
         except ClientError as e:
-            raise Exception(f"Failed to generate presigned POST: {str(e)}")
+            raise Exception(f"Failed to generate presigned PUT: {str(e)}")
 
     def generate_presigned_get(self, storage_path: str, expires_in: int = 3600) -> str:
         """Generate a short-lived download URL."""

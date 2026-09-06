@@ -21,15 +21,27 @@ class UploadService {
     }
 
     // Real object storage upload
+    if (!form_data || Object.keys(form_data).length === 0) {
+      // Use PUT request since there are no form fields (Supabase S3 compatibility uses PUT)
+      await axios.put(presigned_url, file, {
+        cancelToken: cancelToken,
+        headers: {
+          'Content-Type': file.type || 'application/octet-stream',
+        },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onProgress(percentCompleted);
+        }
+      });
+      return;
+    }
+
+    // Fallback to standard AWS S3 POST with form_data
     const formData = new FormData();
-    
-    // Add all fields required by the presigned POST (e.g., S3 fields)
     Object.entries(form_data || {}).forEach(([key, value]) => {
       formData.append(key, value);
     });
-    
-    // The file MUST be the last field in S3
-    formData.append('file', file);
+    formData.append('file', file); // MUST be last
 
     await axios.post(presigned_url, formData, {
       cancelToken: cancelToken,
