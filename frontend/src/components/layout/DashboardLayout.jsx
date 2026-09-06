@@ -19,9 +19,9 @@ export function DashboardLayout() {
     );
   }
 
-  // if (!user) {
-  //   return <Navigate to="/login" replace />;
-  // }
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <GlobalDropzone>

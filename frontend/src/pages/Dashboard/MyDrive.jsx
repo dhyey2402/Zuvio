@@ -90,6 +90,10 @@ export default function MyDrive() {
           viewMode={viewMode} 
           isLoading={isLoading} 
           onFileClick={(file) => setPreviewFile(file)}
+          emptyStateProps={{
+            onUpload: () => fileInputRef.current?.click(),
+            onCreateFolder: () => setIsCreateFolderOpen(true)
+          }}
         />
       </div>
 
